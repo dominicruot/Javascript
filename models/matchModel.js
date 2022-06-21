@@ -8,6 +8,7 @@ const MatchModel = mongoose.model(
         away: String,
         avenue: String,
         kickstart: String,
+        time: String,
     })
 
 )

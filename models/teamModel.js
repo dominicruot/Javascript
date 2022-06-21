@@ -5,7 +5,7 @@ const teamModel = mongoose.model(
     new mongoose.Schema({
         user: String,
         name: String,
-        points: String,
+        points: Number,
 
     })
 
