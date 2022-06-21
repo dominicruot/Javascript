@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const MatchModel = mongoose.model(
-    'MatchModel',
+    'Match',
     new mongoose.Schema({
         referee: String,
         home: String,

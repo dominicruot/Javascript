@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const AwayModel = mongoose.model(
-    'AwayModel',
+    'Away',
     new mongoose.Schema({
         team: String,
         name: String,

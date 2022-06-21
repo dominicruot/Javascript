@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const LeagueModel = mongoose.model(
-    'LeagueModel',
+    'League',
     new mongoose.Schema({
         team: String,
         win: String,

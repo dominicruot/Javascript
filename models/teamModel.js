@@ -1,18 +1,14 @@
 const mongoose = require("mongoose")
 
-const PlayerModel = mongoose.model(
-    'PlayerModel',
+const teamModel = mongoose.model(
+    'Team',
     new mongoose.Schema({
         user: String,
         name: String,
-        age: String,
-        class: String,
-        roles: String,
-        cards: String,
-        score: String,
+        points: String,
 
     })
 
 )
 
-module.exports = PlayerModel;
+module.exports = teamModel;
