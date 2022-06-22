@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const FeeModel = mongoose.model(
-    'FeeModel',
+    'Fee',
     new mongoose.Schema({
         user: String,
         amount: String,

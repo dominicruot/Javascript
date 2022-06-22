@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const HomeModel = mongoose.model(
-    'HomeModel',
+    'Home',
     new mongoose.Schema({
         team: String,
         name: String,

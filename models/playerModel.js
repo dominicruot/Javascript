@@ -5,8 +5,8 @@ const PlayerModel = mongoose.model(
     new mongoose.Schema({
         user: String,
         name: String,
-        age: String,
-        class: String,
+        age: Number,
+        class: Number,
         roles: String,
         cards: String,
         score: String,
