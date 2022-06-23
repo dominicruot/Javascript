@@ -1,24 +1,25 @@
 const teamModel = require('../models/teamModel')
 const express = require('express');
+const HomeModel = require('../models/homeModel');
 const router = express.Router()
 
-router.getTeams = async (req, res) => {
-    const teams = await teamModel.find({})
+router.getHomes = async (req, res) => {
+    const homes = await HomeModel.find({})
     res.status(200).json({
-        teams: teams
+        homes: homes
     })
 }
 
 
 //Create a team
-router.createTeam = async (req, res) => {
-    const createdTeam = await new teamModel({
-        user: req.body.user,
+router.createHome = async (req, res) => {
+    const createdHome = await new HomeModel({
+        team: req.body.team,
         name: req.body.name,
-        points: req.body.points,
+        score: req.body.score,
     });
 
-    createdTeam.save(function (err, data) {
+    createdHome.save(function (err, data) {
         if (err) {
             console.log(err);
             res.status(500).json({ message: "Some error occurred while creating the Location." });
@@ -28,28 +29,28 @@ router.createTeam = async (req, res) => {
     })
 }
 
-router.editTeam = function (req, res) {
+router.editHome = function (req, res) {
     // Update a note identified by the noteId in the request
-    teamModel.findById(req.params.id, function (err, note) {
+    HomeModel.findById(req.params.id, function (err, note) {
         if (err) {
             res.status(500).send({ message: "Could not find a note with id " + req.params.id });
         }
+        note.team = req.body.team,
+            note.name = req.body.name,
+            note.score = req.body.score,
 
-        note.name = req.body.name;
-        note.points = req.body.points;
-
-        note.save(function (err, data) {
-            if (err) {
-                res.status(500).send({ message: "Could not update note with id " + req.params.noteId });
-            } else {
-                res.send(data);
-            }
-        });
+            note.save(function (err, data) {
+                if (err) {
+                    res.status(500).send({ message: "Could not update note with id " + req.params.noteId });
+                } else {
+                    res.send(data);
+                }
+            });
     });
 }
 
-router.deleteTeam = (req, res) => {
-    teamModel.remove({ _id: req.params.id }, function (err, data) {
+router.deleteHome = (req, res) => {
+    HomeModel.remove({ _id: req.params.id }, function (err, data) {
         if (err) {
             res.status(500).send({ message: "Could not delete team with id " + req.params.id });
         } else {

@@ -1,24 +1,28 @@
-const teamModel = require('../models/teamModel')
 const express = require('express');
+const LeagueModel = require('../models/leagueModel');
 const router = express.Router()
 
-router.getTeams = async (req, res) => {
-    const teams = await teamModel.find({})
+router.getLeagues = async (req, res) => {
+    const leagues = await LeagueModel.find({})
     res.status(200).json({
-        teams: teams
+        leagues: leagues
     })
 }
 
 
 //Create a team
-router.createTeam = async (req, res) => {
-    const createdTeam = await new teamModel({
-        user: req.body.user,
-        name: req.body.name,
-        points: req.body.points,
+router.createLeague = async (req, res) => {
+    const createdLeague = await new LeagueModel({
+        team: req.body.team,
+        win: req.body.win,
+        lose: req.body.lose,
+        draw: req.body.draw,
+        point: req.body.point,
+        reprimanded: req.body.reprimanded,
+        discipline: req.body.discipline
     });
 
-    createdTeam.save(function (err, data) {
+    createdLeague.save(function (err, data) {
         if (err) {
             console.log(err);
             res.status(500).json({ message: "Some error occurred while creating the Location." });
@@ -28,15 +32,20 @@ router.createTeam = async (req, res) => {
     })
 }
 
-router.editTeam = function (req, res) {
+router.editLeague = function (req, res) {
     // Update a note identified by the noteId in the request
-    teamModel.findById(req.params.id, function (err, note) {
+    LeagueModel.findById(req.params.id, function (err, note) {
         if (err) {
             res.status(500).send({ message: "Could not find a note with id " + req.params.id });
         }
 
-        note.name = req.body.name;
-        note.points = req.body.points;
+        note.team = req.body.team,
+            note.win = req.body.win,
+            note.lose = req.body.lose,
+            note.draw = req.body.draw,
+            note.point = req.body.point,
+            note.reprimanded = req.body.reprimanded,
+            note.discipline = req.body.discipline
 
         note.save(function (err, data) {
             if (err) {
@@ -48,12 +57,12 @@ router.editTeam = function (req, res) {
     });
 }
 
-router.deleteTeam = (req, res) => {
-    teamModel.remove({ _id: req.params.id }, function (err, data) {
+router.deleteLeague = (req, res) => {
+    LeagueModel.remove({ _id: req.params.id }, function (err, data) {
         if (err) {
             res.status(500).send({ message: "Could not delete team with id " + req.params.id });
         } else {
-            res.send({ message: "Team deleted successfully!" })
+            res.send({ message: "League deleted successfully!" })
         }
     });
 }

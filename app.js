@@ -39,11 +39,6 @@ app.use('/home', homeRoute);
 app.use('/away', awayRoute);
 app.use('/league', leagueRoute);
 
-
-
-
-
-
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
@@ -59,7 +54,7 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-const port = 3000
+const port = 3001
 app.listen(port, () => {
   console.log(`Working at ${port}`)
 })

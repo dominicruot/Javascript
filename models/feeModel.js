@@ -7,7 +7,6 @@ const FeeModel = mongoose.model(
         amount: String,
         datepaid: String,
         expiry: String,
-        createAt: String,
 
     })
 

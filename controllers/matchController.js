@@ -1,24 +1,27 @@
-const teamModel = require('../models/teamModel')
 const express = require('express');
+const MatchModel = require('../models/matchModel');
 const router = express.Router()
 
-router.getTeams = async (req, res) => {
-    const teams = await teamModel.find({})
+router.getMatches = async (req, res) => {
+    const matches = await MatchModel.find({})
     res.status(200).json({
-        teams: teams
+        matches: matches
     })
 }
 
 
 //Create a team
-router.createTeam = async (req, res) => {
-    const createdTeam = await new teamModel({
-        user: req.body.user,
-        name: req.body.name,
-        points: req.body.points,
+router.createMatch = async (req, res) => {
+    const createMatch = await new MatchModel({
+        referee: req.body.referee,
+        home: req.body.home,
+        away: req.body.away,
+        avenue: req.body.avenue,
+        kickstart: req.body.kickstart,
+        time: req.body.time,
     });
 
-    createdTeam.save(function (err, data) {
+    createMatch.save(function (err, data) {
         if (err) {
             console.log(err);
             res.status(500).json({ message: "Some error occurred while creating the Location." });
@@ -28,32 +31,36 @@ router.createTeam = async (req, res) => {
     })
 }
 
-router.editTeam = function (req, res) {
+router.editMatch = function (req, res) {
     // Update a note identified by the noteId in the request
-    teamModel.findById(req.params.id, function (err, note) {
+    MatchModel.findById(req.params.id, function (err, note) {
         if (err) {
             res.status(500).send({ message: "Could not find a note with id " + req.params.id });
         }
 
-        note.name = req.body.name;
-        note.points = req.body.points;
+        note.referee = req.body.referee,
+            note.home = req.body.home,
+            note.away = req.body.away,
+            note.avenue = req.body.avenue,
+            note.kickstart = req.body, kickstart,
+            note.time = req.body.time,
 
-        note.save(function (err, data) {
-            if (err) {
-                res.status(500).send({ message: "Could not update note with id " + req.params.noteId });
-            } else {
-                res.send(data);
-            }
-        });
+            note.save(function (err, data) {
+                if (err) {
+                    res.status(500).send({ message: "Could not update note with id " + req.params.noteId });
+                } else {
+                    res.send(data);
+                }
+            });
     });
 }
 
-router.deleteTeam = (req, res) => {
-    teamModel.remove({ _id: req.params.id }, function (err, data) {
+router.deleteMatch = (req, res) => {
+    MatchModel.remove({ _id: req.params.id }, function (err, data) {
         if (err) {
-            res.status(500).send({ message: "Could not delete team with id " + req.params.id });
+            res.status(500).send({ message: "Could not Match  with id " + req.params.id });
         } else {
-            res.send({ message: "Team deleted successfully!" })
+            res.send({ message: "Match deleted successfully!" })
         }
     });
 }
