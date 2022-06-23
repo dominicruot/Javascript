@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema({
     resetLink: {
         type: String,
         default: ''
+    },
+    paid: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 
