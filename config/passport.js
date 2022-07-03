@@ -1,40 +1,24 @@
-const LocalStrategy = require('passport-local').Strategy;
-const bcrypt = require('bcryptjs');
+const jwtStrategy = require("passport-jwt").Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+const mongoose = require('mongoose');
+const User = mongoose.model("User");
+const config = require('config');
 
-//------------ Local User Model ------------//
-const UserModel = require('../models/userModel');
+const opts = {};
+opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.secretOrKey = config.get('secretOrKey');
 
-module.exports = function (passport) {
+module.exports = passport => {
     passport.use(
-        new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-            //------------ User Matching ------------//
-            UserModel.findOne({
-                email: email
-            }).then(user => {
-                if (!user) {
-                    return done(null, false, { message: 'This email ID is not registered' });
-                }
-
-                //------------ Password Matching ------------//
-                bcrypt.compare(password, user.password, (err, isMatch) => {
-                    if (err) throw err;
-                    if (isMatch) {
+        new jwtStrategy(opts, (jwt_payload, done) => {
+            User.findById(jwt_payload.id)
+                .then(user => {
+                    if (user) {
                         return done(null, user);
-                    } else {
-                        return done(null, false, { message: 'Password incorrect! Please try again.' });
                     }
-                });
-            });
+                    return done(null, false);
+                })
+                .catch(err => console.log(err));
         })
     );
-
-    passport.serializeUser(function (user, done) {
-        done(null, user.id);
-    });
-
-    passport.deserializeUser(function (id, done) {
-        UserModel.findById(id, function (err, user) {
-            done(err, user);
-        });
-    });
 };

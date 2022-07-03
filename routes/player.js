@@ -1,16 +1,15 @@
 var express = require('express');
 const { create } = require('hbs');
 const { getPlayers, createPlayer, editPlayer, deletePlayer } = require('../controllers/playerController');
-const { loginHandle } = require('../controllers/userController');
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', loginHandle, getPlayers);
+router.get('/', getPlayers);
 /* CREATE team. */
-router.post('/create', loginHandle, createPlayer);
+router.post('/create', createPlayer);
 /* EDIT Team */
-router.put('/edit/:id', loginHandle, editPlayer)
+router.put('/edit/:id', editPlayer)
 /* DELETE Team. */
-router.delete('/delete/:id', loginHandle, deletePlayer);
+router.delete('/delete/:id', deletePlayer);
 
 module.exports = router;

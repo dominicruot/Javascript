@@ -14,6 +14,7 @@ var playerRoute = require('./routes/player.js')
 var homeRoute = require('./routes/home.js')
 var awayRoute = require('./routes/away.js')
 var leagueRoute = require('./routes/league.js')
+const passport = require("passport");
 
 
 var app = express();
@@ -43,6 +44,7 @@ app.use('/league', leagueRoute);
 app.use(function (req, res, next) {
   next(createError(404));
 });
+// require("./config/passport")(passport);
 
 // error handler
 app.use(function (err, req, res, next) {
@@ -54,7 +56,7 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-const port = 3001
+const port = 8000
 app.listen(port, () => {
   console.log(`Working at ${port}`)
 })

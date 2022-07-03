@@ -1,394 +1,182 @@
-const passport = require('passport');
-const bcryptjs = require('bcryptjs');
-const nodemailer = require('nodemailer');
-const { google } = require("googleapis");
-const OAuth2 = google.auth.OAuth2;
-const jwt = require('jsonwebtoken');
-const JWT_KEY = "jwtactive987";
-const JWT_RESET_KEY = "jwtreset987";
 const express = require('express');
 const router = express.Router()
-//------------ User Model ------------//
-const User = require('../models/userModel');
 
-//------------ Register Handle ------------//
-router.registerHandle = (req, res) => {
-    const { name, email, password, password2 } = req.body;
-    let errors = [];
+//Load Input Validation
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const keys = require("../config/key");
+const passport = require("passport");
+const isEmpty = require('is-empty');
+const validator = require('validator');
+// Load input validation
+// const validateRegisterInput = require("../../validation/register");
+// const validateLoginInput = require("../../validation/login");
 
-    //------------ Checking required fields ------------//
-    if (!name || !email || !password || !password2) {
-        errors.push({ msg: 'Please enter all fields' });
-    }
+// Load User model
+const User = require('../models/userModel')
 
-    //------------ Checking password mismatch ------------//
-    if (password != password2) {
-        errors.push({ msg: 'Passwords do not match' });
-    }
+// @route POST api/users/register
+// @desc Register user
+// @access Public
+router.SignUp = (req, res) => {
+    // Form validation
+    function validateRegisterInput(data) {
+        let errors = {};
+        //Convert empty fields to an empty string so we can use validator functions
+        data.name = !isEmpty(data.name) ? data.name : "";
+        data.email = !isEmpty(data.email) ? data.email : "";
+        data.password = !isEmpty(data.password) ? data.password : "";
+        data.password2 = !isEmpty(data.password2) ? data.password2 : "";
 
-    //------------ Checking password length ------------//
-    if (password.length < 8) {
-        errors.push({ msg: 'Password must be at least 8 characters' });
-    }
+        //name Checks
+        if (validator.isEmpty(data.name)) {
+            errors.name = "Name field is required";
+        }
 
-    if (errors.length > 0) {
-        res.render('register', {
+        //Email Checks
+        if (validator.isEmpty(data.email)) {
+            errors.email = "Email field is required";
+        } else if (!validator.isEmail(data.email)) {
+            errors.email = "Email is Invalid";
+        }
+
+        //Password Checks
+        if (validator.isEmpty(data.password)) {
+            errors.password = "Password field is required";
+        }
+        // Password length checks
+        else if (!validator.isLength(data.password, {
+            min: 6,
+            max: 30
+        })) {
+            errors.password = "Password must be at least 6 characters";
+        }
+
+        // Password2 checks
+        else if (validator.isEmpty(data.password2)) {
+            errors.password2 = "Confirm Password field is required";
+        }
+
+        // Password and password2 compares
+        else if (!validator.equals(data.password, data.password2)) {
+            errors.password2 = "Passwords do not match";
+        }
+
+        return {
             errors,
-            name,
-            email,
-            password,
-            password2
-        });
-    } else {
-        //------------ Validation passed ------------//
-        User.findOne({ email: email }).then(user => {
-            if (user) {
-                //------------ User already exists ------------//
-                errors.push({ msg: 'Email ID already registered' });
-                res.render('register', {
-                    errors,
-                    name,
-                    email,
-                    password,
-                    password2
+            isValid: isEmpty(errors)
+        };
+    }
+    const { errors, isValid } = validateRegisterInput(req.body);
+
+    // Check validation
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
+
+    User.findOne({ email: req.body.email }).then(user => {
+        if (user) {
+            return res.status(400).json({ email: "Email already exists" });
+        } else {
+            const newUser = new User({
+                name: req.body.name,
+                email: req.body.email,
+                password: req.body.password
+            });
+
+            // Hash password before saving in database
+            bcrypt.genSalt(10, (err, salt) => {
+                bcrypt.hash(newUser.password, salt, (err, hash) => {
+                    if (err) throw err;
+                    newUser.password = hash;
+                    newUser
+                        .save()
+                        .then(user => res.json(user))
+                        .catch(err => console.log(err));
                 });
-            } else {
+            });
+        }
+    });
+}
 
-                const oauth2Client = new OAuth2(
-                    "173872994719-pvsnau5mbj47h0c6ea6ojrl7gjqq1908.apps.googleusercontent.com", // ClientID
-                    "OKXIYR14wBB_zumf30EC__iJ", // Client Secret
-                    "https://developers.google.com/oauthplayground" // Redirect URL
-                );
+// @route POST api/users/login
+// @desc Login user and return JWT token
+// @access Public
+router.Login = (req, res) => {
+    // Form validation
+    //Login Validator
+    function validateLoginInput(data) {
+        let errors = {};
 
-                oauth2Client.setCredentials({
-                    refresh_token: "1//04T_nqlj9UVrVCgYIARAAGAQSNwF-L9IrGm-NOdEKBOakzMn1cbbCHgg2ivkad3Q_hMyBkSQen0b5ABfR8kPR18aOoqhRrSlPm9w"
-                });
-                const accessToken = oauth2Client.getAccessToken()
+        // Convert empty fields to an empty string so we can use validator functions
+        data.email = !isEmpty(data.email) ? data.email : "";
+        data.password = !isEmpty(data.password) ? data.password : "";
 
-                const token = jwt.sign({ name, email, password }, JWT_KEY, { expiresIn: '30m' });
-                const CLIENT_URL = 'http://' + req.headers.host;
+        //Email Checks
+        if (validator.isEmpty(data.email)) {
+            errors.email = "Email field is required";
+        } else if (!validator.isEmail(data.email)) {
+            errors.email = "Email is Invalid";
+        }
 
-                const output = `
-                <h2>Please click on below link to activate your account</h2>
-                <p>${CLIENT_URL}/auth/activate/${token}</p>
-                <p><b>NOTE: </b> The above activation link expires in 30 minutes.</p>
-                `;
+        //Password Checks
+        if (validator.isEmpty(data.password)) {
+            errors.password = "Password field is required";
+        }
+        return {
+            errors,
+            isValid: isEmpty(errors)
+        };
+    }
+    const { errors, isValid } = validateLoginInput(req.body);
 
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        type: "OAuth2",
-                        user: "nodejsa@gmail.com",
-                        clientId: "173872994719-pvsnau5mbj47h0c6ea6ojrl7gjqq1908.apps.googleusercontent.com",
-                        clientSecret: "OKXIYR14wBB_zumf30EC__iJ",
-                        refreshToken: "1//04T_nqlj9UVrVCgYIARAAGAQSNwF-L9IrGm-NOdEKBOakzMn1cbbCHgg2ivkad3Q_hMyBkSQen0b5ABfR8kPR18aOoqhRrSlPm9w",
-                        accessToken: accessToken
-                    },
-                });
+    // Check validation
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
 
-                // send mail with defined transport object
-                const mailOptions = {
-                    from: '"Auth Admin" <nodejsa@gmail.com>', // sender address
-                    to: email, // list of receivers
-                    subject: "Account Verification: NodeJS Auth ✔", // Subject line
-                    generateTextFromHTML: true,
-                    html: output, // html body
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // Find user by email
+    User.findOne({ email }).then(user => {
+        // Check if user exists
+        if (!user) {
+            return res.status(404).json({ emailnotfound: "Email not found" });
+        }
+
+        // Check password
+        bcrypt.compare(password, user.password).then(isMatch => {
+            if (isMatch) {
+                // User matched
+                // Create JWT Payload
+                const payload = {
+                    id: user.id,
+                    name: user.name
                 };
 
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.log(error);
-                        req.flash(
-                            'error_msg',
-                            'Something went wrong on our end. Please register again.'
-                        );
-                        res.redirect('/auth/login');
+                // Sign token
+                jwt.sign(
+                    payload,
+                    keys.secretOrKey,
+                    {
+                        expiresIn: 31556926 // 1 year in seconds
+                    },
+                    (err, token) => {
+                        res.json({
+                            success: true,
+                            token: "Bearer " + token
+                        });
                     }
-                    else {
-                        console.log('Mail sent : %s', info.response);
-                        req.flash(
-                            'success_msg',
-                            'Activation link sent to email ID. Please activate to log in.'
-                        );
-                        res.redirect('/auth/login');
-                    }
-                })
-
-            }
-        });
-    }
-}
-
-//------------ Activate Account Handle ------------//
-router.activateHandle = (req, res) => {
-    const token = req.params.token;
-    let errors = [];
-    if (token) {
-        jwt.verify(token, JWT_KEY, (err, decodedToken) => {
-            if (err) {
-                req.flash(
-                    'error_msg',
-                    'Incorrect or expired link! Please register again.'
                 );
-                res.redirect('/auth/register');
-            }
-            else {
-                const { name, email, password } = decodedToken;
-                User.findOne({ email: email }).then(user => {
-                    if (user) {
-                        //------------ User already exists ------------//
-                        req.flash(
-                            'error_msg',
-                            'Email ID already registered! Please log in.'
-                        );
-                        res.redirect('/auth/login');
-                    } else {
-                        const newUser = new User({
-                            name,
-                            email,
-                            password
-                        });
-
-                        bcryptjs.genSalt(10, (err, salt) => {
-                            bcryptjs.hash(newUser.password, salt, (err, hash) => {
-                                if (err) throw err;
-                                newUser.password = hash;
-                                newUser
-                                    .save()
-                                    .then(user => {
-                                        req.flash(
-                                            'success_msg',
-                                            'Account activated. You can now log in.'
-                                        );
-                                        res.redirect('/auth/login');
-                                    })
-                                    .catch(err => console.log(err));
-                            });
-                        });
-                    }
-                });
-            }
-
-        })
-    }
-    else {
-        console.log("Account activation error!")
-    }
-}
-
-//------------ Forgot Password Handle ------------//
-router.forgotPassword = (req, res) => {
-    const { email } = req.body;
-
-    let errors = [];
-
-    //------------ Checking required fields ------------//
-    if (!email) {
-        errors.push({ msg: 'Please enter an email ID' });
-    }
-
-    if (errors.length > 0) {
-        res.render('forgot', {
-            errors,
-            email
-        });
-    } else {
-        User.findOne({ email: email }).then(user => {
-            if (!user) {
-                //------------ User already exists ------------//
-                errors.push({ msg: 'User with Email ID does not exist!' });
-                res.render('forgot', {
-                    errors,
-                    email
-                });
             } else {
-
-                const oauth2Client = new OAuth2(
-                    "173872994719-pvsnau5mbj47h0c6ea6ojrl7gjqq1908.apps.googleusercontent.com", // ClientID
-                    "OKXIYR14wBB_zumf30EC__iJ", // Client Secret
-                    "https://developers.google.com/oauthplayground" // Redirect URL
-                );
-
-                oauth2Client.setCredentials({
-                    refresh_token: "1//04T_nqlj9UVrVCgYIARAAGAQSNwF-L9IrGm-NOdEKBOakzMn1cbbCHgg2ivkad3Q_hMyBkSQen0b5ABfR8kPR18aOoqhRrSlPm9w"
-                });
-                const accessToken = oauth2Client.getAccessToken()
-
-                const token = jwt.sign({ _id: user._id }, JWT_RESET_KEY, { expiresIn: '30m' });
-                const CLIENT_URL = 'http://' + req.headers.host;
-                const output = `
-                <h2>Please click on below link to reset your account password</h2>
-                <p>${CLIENT_URL}/auth/forgot/${token}</p>
-                <p><b>NOTE: </b> The activation link expires in 30 minutes.</p>
-                `;
-
-                User.updateOne({ resetLink: token }, (err, success) => {
-                    if (err) {
-                        errors.push({ msg: 'Error resetting password!' });
-                        res.render('forgot', {
-                            errors,
-                            email
-                        });
-                    }
-                    else {
-                        const transporter = nodemailer.createTransport({
-                            service: 'gmail',
-                            auth: {
-                                type: "OAuth2",
-                                user: "nodejsa@gmail.com",
-                                clientId: "173872994719-pvsnau5mbj47h0c6ea6ojrl7gjqq1908.apps.googleusercontent.com",
-                                clientSecret: "OKXIYR14wBB_zumf30EC__iJ",
-                                refreshToken: "1//04T_nqlj9UVrVCgYIARAAGAQSNwF-L9IrGm-NOdEKBOakzMn1cbbCHgg2ivkad3Q_hMyBkSQen0b5ABfR8kPR18aOoqhRrSlPm9w",
-                                accessToken: accessToken
-                            },
-                        });
-
-                        // send mail with defined transport object
-                        const mailOptions = {
-                            from: '"Auth Admin" <nodejsa@gmail.com>', // sender address
-                            to: email, // list of receivers
-                            subject: "Account Password Reset: NodeJS Auth ✔", // Subject line
-                            html: output, // html body
-                        };
-
-                        transporter.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                console.log(error);
-                                req.flash(
-                                    'error_msg',
-                                    'Something went wrong on our end. Please try again later.'
-                                );
-                                res.redirect('/auth/forgot');
-                            }
-                            else {
-                                console.log('Mail sent : %s', info.response);
-                                req.flash(
-                                    'success_msg',
-                                    'Password reset link sent to email ID. Please follow the instructions.'
-                                );
-                                res.redirect('/auth/login');
-                            }
-                        })
-                    }
-                })
-
+                return res
+                    .status(400)
+                    .json({ passwordincorrect: "Password incorrect" });
             }
         });
-    }
-}
-
-//------------ Redirect to Reset Handle ------------//
-router.gotoReset = (req, res) => {
-    const { token } = req.params;
-
-    if (token) {
-        jwt.verify(token, JWT_RESET_KEY, (err, decodedToken) => {
-            if (err) {
-                req.flash(
-                    'error_msg',
-                    'Incorrect or expired link! Please try again.'
-                );
-                res.redirect('/auth/login');
-            }
-            else {
-                const { _id } = decodedToken;
-                User.findById(_id, (err, user) => {
-                    if (err) {
-                        req.flash(
-                            'error_msg',
-                            'User with email ID does not exist! Please try again.'
-                        );
-                        res.redirect('/auth/login');
-                    }
-                    else {
-                        res.redirect(`/auth/reset/${_id}`)
-                    }
-                })
-            }
-        })
-    }
-    else {
-        console.log("Password reset error!")
-    }
+    });
 }
 
 
-router.resetPassword = (req, res) => {
-    var { password, password2 } = req.body;
-    const id = req.params.id;
-    let errors = [];
-
-    //------------ Checking required fields ------------//
-    if (!password || !password2) {
-        req.flash(
-            'error_msg',
-            'Please enter all fields.'
-        );
-        res.redirect(`/auth/reset/${id}`);
-    }
-
-    //------------ Checking password length ------------//
-    else if (password.length < 8) {
-        req.flash(
-            'error_msg',
-            'Password must be at least 8 characters.'
-        );
-        res.redirect(`/auth/reset/${id}`);
-    }
-
-    //------------ Checking password mismatch ------------//
-    else if (password != password2) {
-        req.flash(
-            'error_msg',
-            'Passwords do not match.'
-        );
-        res.redirect(`/auth/reset/${id}`);
-    }
-
-    else {
-        bcryptjs.genSalt(10, (err, salt) => {
-            bcryptjs.hash(password, salt, (err, hash) => {
-                if (err) throw err;
-                password = hash;
-
-                User.findByIdAndUpdate(
-                    { _id: id },
-                    { password },
-                    function (err, result) {
-                        if (err) {
-                            req.flash(
-                                'error_msg',
-                                'Error resetting password!'
-                            );
-                            res.redirect(`/auth/reset/${id}`);
-                        } else {
-                            req.flash(
-                                'success_msg',
-                                'Password reset successfully!'
-                            );
-                            res.redirect('/auth/login');
-                        }
-                    }
-                );
-
-            });
-        });
-    }
-}
-
-//------------ Login Handle ------------//
-router.loginHandle = (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/dashboard',
-        failureRedirect: '/auth/login',
-        failureFlash: true
-    })(req, res, next);
-}
-
-//------------ Logout Handle ------------//
-router.logoutHandle = (req, res) => {
-    req.logout();
-    req.flash('success_msg', 'You are logged out');
-    res.redirect('/auth/login');
-}
 module.exports = router

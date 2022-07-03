@@ -1,16 +1,15 @@
 var express = require('express');
 const { create } = require('hbs');
 const { getTeams, createTeam, editTeam, deleteTeam } = require('../controllers/teamController');
-const { ensureAuthenticated } = require('../config/checkAuth')
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', ensureAuthenticated, getTeams);
+router.get('/', getTeams);
 /* CREATE team. */
-router.post('/create', ensureAuthenticated, createTeam);
+router.post('/create', createTeam);
 /* EDIT Team */
-router.put('/edit/:id', ensureAuthenticated, editTeam)
+router.put('/edit/:id', editTeam)
 /* DELETE Team. */
-router.delete('/delete/:id', ensureAuthenticated, deleteTeam);
+router.delete('/delete/:id', deleteTeam);
 
 module.exports = router;

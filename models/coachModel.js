@@ -1,9 +1,10 @@
 const mongoose = require("mongoose")
+var Schema = mongoose.Schema;
 
 const CoachModel = mongoose.model(
     'Coach',
     new mongoose.Schema({
-        user: String,
+        user: Schema.ObjectId,
         name: String,
         password: String,
         passwordConfirm: String,

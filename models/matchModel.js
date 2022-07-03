@@ -1,9 +1,10 @@
 const mongoose = require("mongoose")
+var Schema = mongoose.Schema;
 
 const MatchModel = mongoose.model(
     'Match',
     new mongoose.Schema({
-        referee: String,
+        referee: Schema.ObjectId,
         home: String,
         away: String,
         avenue: String,

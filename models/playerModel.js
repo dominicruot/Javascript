@@ -1,9 +1,10 @@
 const mongoose = require("mongoose")
+var Schema = mongoose.Schema;
 
 const PlayerModel = mongoose.model(
     'Player',
     new mongoose.Schema({
-        team: String,
+        team: Schema.ObjectId,
         name: String,
         age: Number,
         class: Number,

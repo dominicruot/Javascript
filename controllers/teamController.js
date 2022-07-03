@@ -1,12 +1,23 @@
 const teamModel = require('../models/teamModel')
 const express = require('express');
 const router = express.Router()
+const jwt = require("jsonwebtoken");
+const secret = 'secret123';
 
 router.getTeams = async (req, res) => {
-    const teams = await teamModel.find({})
-    res.status(200).json({
-        teams: teams
-    })
+    const payload = jwt.verify(req.cookies.token, secret);
+    teamModel.where({ user: new mongoose.Types.ObjectId(payload.id) })
+        .find((err, teams) => {
+            if (teams) {
+                res.status(200).json({
+                    message: teams
+                })
+            } else {
+                res.status(404).json({
+                    message: err
+                })
+            }
+        })
 }
 
 
