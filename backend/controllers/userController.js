@@ -8,6 +8,7 @@ const keys = require("../config/key");
 const passport = require("passport");
 const isEmpty = require('is-empty');
 const validator = require('validator');
+
 // Load input validation
 // const validateRegisterInput = require("../../validation/register");
 // const validateLoginInput = require("../../validation/login");
@@ -15,6 +16,12 @@ const validator = require('validator');
 // Load User model
 const User = require('../models/userModel')
 
+router.GetUsers = async (req, res) => {
+    const users = await User.find({})
+    res.status(200).json({
+        users: users
+    })
+}
 // @route POST api/users/register
 // @desc Register user
 // @access Public
