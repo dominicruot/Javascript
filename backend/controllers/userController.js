@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router()
+const dotenv = require('dotenv');
+dotenv.config({ path: './config.env' });
 
 //Load Input Validation
 const bcrypt = require("bcryptjs");
@@ -25,7 +27,7 @@ router.GetUsers = async (req, res) => {
 router.Signup = async (req, res) => {
     const { name, email, password, password2 } = req.body;
     if (password !== password2) return res.status(400).json({ msg: "Password and Confirm Password do not match" });
-    if (email == email) return res.status(400).json({ msg: "Email already exist! Try another one" });
+    // if (email == email) return res.status(400).json({ msg: "Email already exist! Try another one" });
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
     try {
@@ -37,6 +39,42 @@ router.Signup = async (req, res) => {
         res.json({ msg: "Registration Successful" });
     } catch (error) {
 
+        console.log(error);
+    }
+}
+
+verifyToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401);
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) return res.sendStatus(403);
+        req.email = decoded.email;
+        next();
+    })
+}
+
+refreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) return res.sendStatus(401);
+        const user = await Users.findAll({
+            where: {
+                refresh_token: refreshToken
+            }
+        });
+        if (!user[0]) return res.sendStatus(403);
+        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+            if (err) return res.sendStatus(403);
+            const userId = user[0].id;
+            const name = user[0].name;
+            const email = user[0].email;
+            const accessToken = jwt.sign({ userId, name, email }, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '15s'
+            });
+            res.json({ accessToken });
+        });
+    } catch (error) {
         console.log(error);
     }
 }
@@ -53,6 +91,7 @@ router.Login = async (req, res) => {
         const userId = user[0].id;
         const name = user[0].name;
         const email = user[0].email;
+
         const accessToken = jwt.sign({ userId, name, email }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: '15s'
         });

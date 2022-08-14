@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import axios from 'axios'
-import { Container, Row, Col } from 'react-bootstrap'
+import { Row, Col } from 'react-bootstrap'
 
 import { useHistory } from "react-router-dom";
 
@@ -40,7 +40,7 @@ function Signup(props) {
       <Col xs={12} md={6}>
         <Form onSubmit={Signup} className="mb-2">
           <h1>Sign In</h1>
-          {msg}
+          <p className="has-text-centered">{msg}</p>
           <Form.Group className="mb-3" controlId="formBasicText">
             <Form.Label>Name</Form.Label>
             <Form.Control type="text" placeholder="Enter name" value={name} onChange={(e) => setName(e.target.value)} />
