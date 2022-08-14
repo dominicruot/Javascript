@@ -1,51 +1,33 @@
-import { BrowserRouter, Switch, Route, Link } from "react-router-dom";
-import { useState, useEffect } from 'react';
-import Signup from "./components/signup";
-import UserContext from "./UserContext";
-import axios from "axios";
-import Login from "./components/login";
-import Landing from "./components/landing";
+import { BrowserRouter as Router, Route } from 'react-router-dom'
+import Container from 'react-bootstrap/Container';
+import Login from './components/login'
+import Signup from './components/signup'
+import Dashboard from './components/dashboard'
+import Header from './components/header'
+import Landing from './components/landing'
+import './bootstrap.min.css'
 
 function App() {
-  const [email, setEmail] = useState('');
-
-  useEffect(() => {
-    axios.get('http://localhost:8000/user', { withCredentials: true })
-      .then(response => {
-        setEmail(response.data.email);
-      });
-  }, []);
-
-  function logout() {
-    axios.post('http://localhost:8000/logout', {}, { withCredentials: true })
-      .then(() => setEmail(''));
-  }
 
   return (
-    <UserContext.Provider value={{ email, setEmail }}>
-      <BrowserRouter>
-        <nav>
-          <Link to={'/'}>Landing</Link>
-          {!email && (
-            <>
-              <Link to={'/login'}>Login</Link>
-              <Link to={'/signup'}>Signup</Link>
-            </>
-          )}
-          {!!email && (
-            <a onClick={e => { e.preventDefault(); logout(); }}>Logout</a>
-          )}
-        </nav>
-        <main>
-          <Switch>
-            <Route exact path={'/'} component={Landing} />
-            <Route exact path={'/register'} component={Signup} />
-            <Route exact path={'/login'} component={Login} />
-          </Switch>
-        </main>
-      </BrowserRouter>
-    </UserContext.Provider>
+    <>
+      <Router>
+        <Header />
+        <Container>
+          <Route path='/' component={Landing} exact />
+          <Route path='/login' component={Login} />
+          <Route path='/signup' component={Signup} exact />
+          <Route path='/dashboard' component={Dashboard} exact />
+
+        </Container>
+
+
+      </Router>
+
+
+    </>
+
   );
 }
+export default App
 
-export default App;

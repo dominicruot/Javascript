@@ -1,40 +1,81 @@
-import { useState, useContext } from 'react';
-import axios from 'axios';
-import UserContext from "../UserContext";
-import { Redirect } from "react-router-dom";
+import React, { useState } from 'react'
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import axios from 'axios'
+import { Container, Row, Col } from 'react-bootstrap'
 
-function Register() {
+import { useHistory } from "react-router-dom";
 
+function Signup(props) {
+
+  //Hooks
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [redirect, setRedirect] = useState(false);
+  const [password2, setPassword2] = useState('');
+  const [msg, setMsg] = useState('');
+  const history = useHistory()
 
-  const user = useContext(UserContext);
-
-  function registerUser(e) {
+  const Signup = async (e) => {
     e.preventDefault();
-
-    const data = { email, password };
-    axios.post('http://localhost:8000/register', data, { withCredentials: true })
-      .then(response => {
-        user.setEmail(response.data.email);
-        setEmail('');
-        setPassword('');
-        setRedirect(true);
+    try {
+      await axios.post('/user/signup/', {
+        name: name,
+        email: email,
+        password: password,
+        password2: password2
       });
+      history.push("/");
+    } catch (error) {
+      if (error.response) {
+        setMsg(error.response.data.msg);
+      }
+    }
   }
 
-  if (redirect) {
-    return <Redirect to={'/'} />
-  }
-
+  //Component
   return (
-    <form action="" onSubmit={e => registerUser(e)}>
-      <input type="email" placeholder="email" value={email} onChange={e => setEmail(e.target.value)} /><br />
-      <input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} /><br />
-      <button type="submit">register</button>
-    </form>
+    <Row className='justify-content-md-center'>
+
+      <Col xs={12} md={6}>
+        <Form onSubmit={Signup} className="mb-2">
+          <h1>Sign In</h1>
+          {msg}
+          <Form.Group className="mb-3" controlId="formBasicText">
+            <Form.Label>Name</Form.Label>
+            <Form.Control type="text" placeholder="Enter name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Form.Text className="text-muted">
+              Enter the name of the school.
+            </Form.Text>
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formBasicEmail">
+            <Form.Label>Email address</Form.Label>
+            <Form.Control type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Form.Text className="text-muted">
+              We'll never share your email with anyone else.
+            </Form.Text>
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formBasicPassword">
+            <Form.Label>Password</Form.Label>
+            <Form.Control type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formBasicPassword">
+            <Form.Label>Password Confirm</Form.Label>
+            <Form.Control type="password" placeholder="Password" value={password2} onChange={(e) => setPassword2(e.target.value)} />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formBasicCheckbox">
+            <Form.Check type="checkbox" label="Check me out" />
+          </Form.Group>
+          <Button variant="primary" type="submit">
+            Submit
+          </Button>
+        </Form>
+      </Col>
+    </Row>
+
   );
 }
 
-export default Register;
+export default Signup;
