@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
+import { Redirect } from "react-router-dom";
+
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import axios from 'axios'
 import { Row, Col } from 'react-bootstrap'
 
-import { useHistory } from "react-router-dom";
+// import { useHistory } from "react-router-dom";
 
 function Signup(props) {
 
@@ -14,7 +16,7 @@ function Signup(props) {
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [msg, setMsg] = useState('');
-  const history = useHistory()
+  // const history = Redirect()
 
   const Signup = async (e) => {
     e.preventDefault();
@@ -25,7 +27,7 @@ function Signup(props) {
         password: password,
         password2: password2
       });
-      history.push("/");
+      Redirect("/login");
     } catch (error) {
       if (error.response) {
         setMsg(error.response.data.msg);
@@ -39,7 +41,7 @@ function Signup(props) {
 
       <Col xs={12} md={6}>
         <Form onSubmit={Signup} className="mb-2">
-          <h1>Sign In</h1>
+          <h1>Sign Up</h1>
           <p className="has-text-centered">{msg}</p>
           <Form.Group className="mb-3" controlId="formBasicText">
             <Form.Label>Name</Form.Label>

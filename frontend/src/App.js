@@ -14,12 +14,15 @@ function App() {
       <Router>
         <Header />
         <Switch>
-          <Container>
-            <Route path='/' component={Landing} exact />
-            <Route path='/login' component={Login} />
-            <Route path='/signup' component={Signup} exact />
-            <Route path='/dashboard' component={Dashboard} exact />
-          </Container>
+          <main className='py-3'>
+            <Container>
+              <Route path='/' component={Landing} exact />
+              <Route path='/login' component={Login} />
+              <Route path='/signup' component={Signup} exact />
+              <Route path='/dashboard' component={Dashboard} exact />
+            </Container>
+          </main>
+
         </Switch>
       </Router>
 
