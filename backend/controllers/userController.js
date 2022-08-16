@@ -26,58 +26,36 @@ router.GetUsers = async (req, res) => {
 
 router.Signup = async (req, res) => {
     const { name, email, password, password2 } = req.body;
+
+    // Validate user input
+    if (!name && email && password && password2) {
+        res.status(400).send("All input is required");
+    }
+    // check if user already exist
+    // Validate if user exist in our databas
+    const oldUser = await Users.findOne({ email });
+    if (oldUser) {
+        return res.status(400).json({ msg: "User Already Exist. Please Login" });
+    }
+
     if (password !== password2) return res.status(400).json({ msg: "Password and Confirm Password do not match" });
-    // if (email == email) return res.status(400).json({ msg: "Email already exist! Try another one" });
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
+
     try {
+
         await Users.create({
             name: name,
             email: email,
             password: hashPassword
         });
-        res.json({ msg: "Registration Successful" });
+        return res.status(200).json({ msg: "Registration Successful" });
     } catch (error) {
 
         console.log(error);
     }
 }
 
-verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) return res.sendStatus(403);
-        req.email = decoded.email;
-        next();
-    })
-}
-
-refreshToken = async (req, res) => {
-    try {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) return res.sendStatus(401);
-        const user = await Users.findAll({
-            where: {
-                refresh_token: refreshToken
-            }
-        });
-        if (!user[0]) return res.sendStatus(403);
-        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-            if (err) return res.sendStatus(403);
-            const userId = user[0].id;
-            const name = user[0].name;
-            const email = user[0].email;
-            const accessToken = jwt.sign({ userId, name, email }, process.env.ACCESS_TOKEN_SECRET, {
-                expiresIn: '15s'
-            });
-            res.json({ accessToken });
-        });
-    } catch (error) {
-        console.log(error);
-    }
-}
 
 router.Login = async (req, res) => {
     try {

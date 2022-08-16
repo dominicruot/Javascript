@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import Container from 'react-bootstrap/Container';
 import Login from './components/login'
 import Signup from './components/signup'
@@ -11,20 +11,24 @@ function App() {
 
   return (
     <>
-      <Router>
-        <Header />
-        <Switch>
-          <main className='py-3'>
-            <Container>
-              <Route path='/' component={Landing} exact />
-              <Route path='/login' component={Login} />
-              <Route path='/signup' component={Signup} exact />
-              <Route path='/dashboard' component={Dashboard} exact />
-            </Container>
-          </main>
+      <BrowserRouter>
 
-        </Switch>
-      </Router>
+        <Router>
+          <Header />
+          <Switch>
+            <main className='py-3'>
+              <Container>
+                <Route path='/' component={Landing} exact />
+                <Route path='/login' component={Login} />
+                <Route path='/signup' component={Signup} />
+                <Route path='/dashboard' component={Dashboard} />
+              </Container>
+            </main>
+
+          </Switch>
+        </Router>
+
+      </BrowserRouter>
 
 
     </>

@@ -6,19 +6,20 @@ import Form from 'react-bootstrap/Form';
 import axios from 'axios'
 import { Row, Col } from 'react-bootstrap'
 
-// import { useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
-function Signup(props) {
+function Signup() {
 
   //Hooks
+  const history = useHistory()
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [msg, setMsg] = useState('');
-  // const history = Redirect()
 
   const Signup = async (e) => {
+
     e.preventDefault();
     try {
       await axios.post('/user/signup/', {
@@ -27,7 +28,9 @@ function Signup(props) {
         password: password,
         password2: password2
       });
-      Redirect("/login");
+
+      history.pushState('/login')
+
     } catch (error) {
       if (error.response) {
         setMsg(error.response.data.msg);
